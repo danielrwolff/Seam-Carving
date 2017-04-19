@@ -9,7 +9,8 @@ class Image {
     origImg = loadImage(filename); 
     altImg = origImg.copy();
     altImg.loadPixels(); 
-    seams = new Seams(altImg.pixels, altImg.width, altImg.height);
+    seams = new Seams(altImg.width, altImg.height);
+    seams.shrinkImage(altImg.pixels, 100);
     altImg.updatePixels();
   }
 

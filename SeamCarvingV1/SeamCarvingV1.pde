@@ -11,7 +11,7 @@ void settings() {
 void setup() {
   
   int now = millis();
-  img = new Image("sumobot.jpg");
+  img = new Image("landscape.jpg");
   println(millis() - now);
 }
 
