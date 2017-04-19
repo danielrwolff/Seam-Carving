@@ -35,8 +35,8 @@ class Seams {
   }
 
   public Seams(int w, int h) {
-    setWidth(w);
-    setHeight(h);
+    pixWidth = w;
+    pixHeight = h;
 
     q = new PriorityQueue<Seam>();
     seamsRemoved = new Stack<Seam>();
@@ -49,18 +49,15 @@ class Seams {
 
     //loadPixels();
 
-    // Set up the first row of weights with the gradient from black to the pixels color.
-    for (int i = 0; i < pixWidth; i++) weights[i] = calcGrad(color(0, 0, 0), pix[i]);
-
     for (int y = 1; y < pixHeight; y++)
       for (int x = 0; x < pixWidth; x++) {
-        int bestWeight = calcGrad(pix[y*pixWidth + x], pix[(y-1)*pixWidth + x]) + weights[(y-1)*pixWidth + x];
+        int bestWeight = calcGrad(pix, y*pixWidth + x) + weights[(y-1)*pixWidth + x];
         int bestDir = 0;
 
         int _w = Integer.MAX_VALUE, w_ = Integer.MAX_VALUE;
 
-        if (x > 0) _w = calcGrad(pix[y*pixWidth + x], pix[(y-1)*pixWidth + x-1]) + weights[(y-1)*pixWidth + x-1];
-        if (x < pixWidth-1) w_ = calcGrad(pix[y*pixWidth + x], pix[(y-1)*pixWidth + x+1]) + weights[(y-1)*pixWidth + x+1];
+        if (x > 0) _w = calcGrad(pix, y*pixWidth + x) + weights[(y-1)*pixWidth + x-1];
+        if (x < pixWidth-1) w_ = calcGrad(pix, y*pixWidth + x) + weights[(y-1)*pixWidth + x+1];
 
         if (bestWeight > _w) {
           bestWeight = _w;
@@ -101,8 +98,6 @@ class Seams {
 
   public void shrinkImage(color[] pix, int r) {
     seamsRemoved.clear();
-
-    int numRemovals = r;
 
     while (r > 0) {
       if (q.isEmpty()) {
@@ -156,15 +151,47 @@ class Seams {
     return start;
   }
 
-  private int calcGrad(color p, color q) {
-    int sum = (int) (abs(red(p) - red(q)) + abs(green(p) - green(q)) + abs(blue(p) - blue(q)));
-    return (int) map(sum, 0, 255*3, 0, 255);
+  public int calcGrad(color[] pix, int i) {
+    int x = 0, y = 0;
+    color p = pix[i];
+    
+    if (i/pixWidth > 0) {
+      if (i%pixWidth > 0)
+        x += colorDiff(pix[i-pixWidth-1], p) * -1;
+      x += colorDiff(pix[i-pixWidth], p) * -2;
+      if (i%pixWidth < pixWidth-1)
+        x += colorDiff(pix[i-pixWidth+1], p) * -1;
+    }
+    
+    if (i/pixWidth < pixHeight-1) {
+      if (i%pixWidth > 0)
+        x += colorDiff(pix[i+pixWidth-1], p) * 1;
+      x += colorDiff(pix[i+pixWidth], p) * 2;
+      if (i%pixWidth < pixWidth-1)
+        x += colorDiff(pix[i+pixWidth+1], p) * 1;
+    }
+    
+    if (i%pixWidth > 0) {
+      if (i/pixWidth > 0)
+        y += colorDiff(pix[i-pixWidth-1], p) * -1;
+      y += colorDiff(pix[i-1], p) * -2;
+      if (i/pixWidth < pixHeight-1)
+        y += colorDiff(pix[i+pixWidth-1], p) * -1;
+    }
+    
+    if (i%pixWidth < pixHeight-1) {
+      if (i/pixWidth > 0)
+        y += colorDiff(pix[i-pixWidth+1], p) * 1;
+      y += colorDiff(pix[i+1], p) * 2;
+      if (i/pixWidth < pixHeight-1)
+        y += colorDiff(pix[i+pixWidth+1], p) * 1;
+    }
+    
+    return abs(x) + abs(y);
+  }
+  
+  private int colorDiff(color p, color q) {
+    return (int) (abs(red(p)-red(q)) + abs(green(p)-green(q)) + abs(blue(p)-blue(q))); 
   }
 
-  public void setWidth(int w) { 
-    pixWidth = w;
-  }
-  public void setHeight(int h) { 
-    pixHeight = h;
-  }
 }
